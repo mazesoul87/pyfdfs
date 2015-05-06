@@ -1,2 +1,5 @@
 # pyfdfs
-python client for fastdfs
+fastdfs python client.
+
+# notice
+developing, not finish
