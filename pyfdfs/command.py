@@ -33,7 +33,7 @@ class Command(object):
         self.pool = pool
         self._conn = None
         self.header = header
-        self.buf = self.header.pack()
+        self.buf = self.header.pack_req()
         self.fmt = fmt
 
     def get_conn(self):
@@ -52,7 +52,8 @@ class Command(object):
     conn = property(get_conn, set_conn, del_conn)
 
     def pack(self, *values):
-        struct.pack_into(self.fmt, self.buf, self.header.resp_header_len(), *values)
+        st = struct.Struct(self.fmt)
+        self.buf = "%s%s" % (self.buf, st.pack(*values))
 
     def execute(self):
         """
@@ -60,21 +61,12 @@ class Command(object):
         """
         try:
             self.conn.send(self.buf)
-            resp_header = self.conn.recv(self.header.header_len())
+            resp_header = self.conn.recv(self.header.resp_header_len())
             self.header.unpack_resp(resp_header)
             if self.header.status != 0:
                 raise Exception('Error: %d, %s' % (self.header.status, os.strerror(self.header.status)))
-            recv_buff = []
-            total_size = 0
-            bytes_size = self.header.resp_pkg_len
-            while bytes_size > 0:
-                resp = self.conn.recv(self.buffer_size)
-                resp_len = len(resp)
-                recv_buff.append(resp)
-                total_size += resp_len
-                bytes_size -= resp_len
-            resp_body = ''.join(recv_buff)
-            return resp_body, total_size
+            resp_body = self.conn.recv(self.header.resp_pkg_len)
+            return resp_body, self.header.resp_pkg_len
         except Exception as e:
             if self.conn:
                 self.conn.disconnect()
@@ -82,5 +74,16 @@ class Command(object):
         finally:
             del self.conn
 
-
-
+    def fetch_list(self, item_cls):
+        resp, resp_size = self.execute()
+        ret_list = []
+        idx = 0
+        item = item_cls()
+        fmt_size = item.get_fmt_size()
+        while resp_size > 0:
+            item.set_info(resp[idx * fmt_size:(idx + 1) * fmt_size])
+            ret_list.append(item)
+            item = item_cls()
+            resp_size -= fmt_size
+            idx += 1
+        return ret_list

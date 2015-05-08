@@ -19,7 +19,7 @@ class Connection(object):
 
     def __init__(self, **conn_kwargs):
         self.pid = os.getpid()
-        self.host_tuple = conn_kwargs["host_tuple"]
+        self.hosts = conn_kwargs["hosts"]
         self.remote_addr = None
         self.remote_port = None
         self.sock = None
@@ -40,7 +40,7 @@ class Connection(object):
     def connect(self):
         if self.sock:
             return
-        self.remote_addr, self.remote_port = random.choice(self.host_tuple)
+        self.remote_addr, self.remote_port = random.choice(self.hosts)
         try:
             sock = socket.create_connection((self.remote_addr, self.remote_port,), self.timeout)
         except socket.error:
@@ -76,16 +76,14 @@ class Connection(object):
         if self.sock is None:
             self.connect()
         recv_buff = []
-        total_size = 0
         try:
             while byte_size > 0:
-                resp = self.sock.recv(buffer_size)
+                resp = self.sock.recv(buffer_size if buffer_size <= byte_size else byte_size)
                 recv_buff.append(resp)
-                total_size += len(resp)
                 byte_size -= len(resp)
         except (socket.error, socket.timeout), e:
             raise Exception('Error: while reading from socket: (%s)' % e.args)
-        return ''.join(recv_buff), total_size
+        return ''.join(recv_buff)
 
     def send(self, byte_stream):
         if self.sock is None:
@@ -123,9 +121,10 @@ class ConnectionPool(object):
         self._in_use_connections = set()
 
     def __repr__(self):
-        return "%s<%s>" % (
+        return "%s<%s:%s>" % (
             type(self).__name__,
-            self.conn_cls.description_format % self.connection_kwargs,
+            self.conn_cls.__name__,
+            self.connection_kwargs["hosts"],
         )
 
     def _check_pid(self):

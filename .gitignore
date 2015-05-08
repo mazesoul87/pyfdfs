@@ -59,3 +59,4 @@ target/
 # idea files
 .idea/
 pyfdfs.iml
+run.py

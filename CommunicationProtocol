@@ -6,13 +6,10 @@ header format:
   @ 1 byte command
   @ 1 byte status
 
-note:
+note: 
    # TRACKER_PROTO_PKG_LEN_SIZE (8) bytes number buff is Big-Endian bytes
 
-
 body format:
-
-
 1. common command
 
 * FDFS_PROTO_CMD_QUIT
@@ -27,120 +24,86 @@ body format:
   # function: list all groups
   # request body: none
   # response body: n group entries, n >= 0, the format of each entry:
-     @ FDFS_GROUP_NAME_MAX_LEN+1 bytes: group name
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: free disk storage in MB
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: storage server count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: storage server port
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: active server count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: current write server index
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: store path count on storage server
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: subdir count per path on storage server
+     @ FDFS_GROUP_NAME_MAX_LEN + 1 bytes: group_name
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_mb
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: free_mb
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: trunk_free_mb
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: storage_port
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: storage_http_port
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: active_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: current_write_server
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: store_path_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: subdir_count_per_path
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: current_trunk_file_id
+
 
  * TRACKER_PROTO_CMD_SERVER_LIST_STORAGE
   # function: list storage servers of a group
   # request body:
      @ FDFS_GROUP_NAME_MAX_LEN bytes: the group name to
      @ IP_ADDRESS_SIZE bytes: this storage server ip address
-  # response body: n storage entries, n >= 0, the format of each entry:
-    #todo:完成response body 结构
-
- * TRACKER_PROTO_CMD_SERVICE_QUERY_STORE
-  # function: query which storage server to store file
-  # request body: none
-  # response body:
-     @ FDFS_GROUP_NAME_MAX_LEN bytes: group name
-     @ FDFS_IPADDR_SIZE - 1 bytes: storage server ip address
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: storage server port
-     @1 byte: store path index on the storage server
-
- * TRACKER_PROTO_CMD_SERVICE_QUERY_FETCH
-  # function: query which storage server to download the file
-  # request body:
-     @ FDFS_GROUP_NAME_MAX_LEN bytes: group name
-     @ filename bytes: filename
-  # response body:
-     @ FDFS_GROUP_NAME_MAX_LEN bytes: group name
-     @ FDFS_IPADDR_SIZE - 1 bytes: storage server ip address
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: storage server port
-
- * TRACKER_PROTO_CMD_SERVICE_QUERY_FETCH_ALL
-  # function: query all storage servers to download the file
-  # request body:
-     @ FDFS_GROUP_NAME_MAX_LEN bytes: group name
-     @ filename bytes: filename
-  # response body:
-     @ FDFS_GROUP_NAME_MAX_LEN bytes: group name
-     @ FDFS_IPADDR_SIZE - 1 bytes: storage server ip address
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: storage server port
-     @ n * (FDFS_IPADDR_SIZE - 1) bytes:  storage server ip addresses, n can be 0
-
- * TRACKER_PROTO_CMD_SERVICE_QUERY_UPDATE
-  # function: query which storage server to download the file
-  # request body:
-     @ FDFS_GROUP_NAME_MAX_LEN bytes: group name
-     @ filename bytes: filename
-  # response body:
-     @ FDFS_GROUP_NAME_MAX_LEN bytes: group name
-     @ FDFS_IPADDR_SIZE - 1 bytes: storage server ip address
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: storage server port
-
-
-3. client to storage server command
- * the response command is STORAGE_PROTO_CMD_RESP
-
- * STORAGE_PROTO_CMD_UPLOAD_FILE
-  # function: upload file to storage server
-  # request body:
-      @ 1 byte: store path index on the storage server
-      @ TRACKER_PROTO_PKG_LEN_SIZE bytes: meta data bytes
-      @ TRACKER_PROTO_PKG_LEN_SIZE bytes: file size
-      @ FDFS_FILE_EXT_NAME_MAX_LEN bytes: file ext name, do not include dot (.)
-      @ meta data bytes: each meta data separated by \x01,
-                         name and value separated by \x02
-      @ file size bytes: file content
-  # response body:
-     @ FDFS_GROUP_NAME_MAX_LEN bytes: group name
-     @ filename bytes: filename
-
-
- * STORAGE_PROTO_CMD_DELETE_FILE
-  # function: delete file from storage server
-  # request body:
-     @ FDFS_GROUP_NAME_MAX_LEN bytes: group name
-     @ filename bytes: filename
-  # response body: none
-
-
- * STORAGE_PROTO_CMD_SET_METADATA
-  # function: set metadata to storage server
-  # request body:
-      @ TRACKER_PROTO_PKG_LEN_SIZE bytes: filename length
-      @ TRACKER_PROTO_PKG_LEN_SIZE bytes: meta data size
-      @ 1 bytes: operation flag,
-           'O' for overwrite all old metadata
-           'M' for merge, insert when the meta item not exist, otherwise update it
-      @ FDFS_GROUP_NAME_MAX_LEN bytes: group name
-      @ filename bytes: filename
-      @ meta data bytes: each meta data separated by \x01,
-                         name and value separated by \x02
-  # response body: none
-
-
- * STORAGE_PROTO_CMD_DOWNLOAD_FILE
-  # function: download/fetch file from storage server
-  # request body:
-      @ TRACKER_PROTO_PKG_LEN_SIZE bytes: file offset
-      @ TRACKER_PROTO_PKG_LEN_SIZE bytes: download file bytes
-      @ FDFS_GROUP_NAME_MAX_LEN bytes: group name
-      @ filename bytes: filename
-  # response body:
-      @ file content
-
-
- * STORAGE_PROTO_CMD_GET_METADATA
-  # function: get meta data from storage server
-  # request body:
-      @ FDFS_GROUP_NAME_MAX_LEN bytes: group name
-      @ filename bytes: filename
-  # response body
-      @ meta data buff, each meta data separated by \x01, name and value separated by \x02
+  # response body: n storage entries, n >= 0, entry format: !B %ds %ds %ds %ds %ds 10Q 3L 42Q B
+     the format of each entry:
+     @ 1 byte: status
+     @ FDFS_STORAGE_ID_MAX_SIZE bytes: id
+     @ IP_ADDRESS_SIZE bytes: ip_addr
+     @ FDFS_DOMAIN_NAME_MAX_SIZE bytes: domain_name
+     @ FDFS_STORAGE_ID_MAX_SIZE bytes: src_ip
+     @ FDFS_VERSION_SIZE bytes: version
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: join_time
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: up_time
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_mb
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: free_mb
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: upload_priority
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: store_path_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: subdir_count_per_path
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: current_write_path
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: storage_port
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: storage_http_port
+     @ 4 bytes: alloc_count
+     @ 4 bytes: current_count
+     @ 4 bytes: max_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_upload_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_upload_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_append_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_append_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_modify_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_modify_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_truncate_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_truncate_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_set_meta_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_set_meta_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_delete_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_delete_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_download_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_download_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_get_meta_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_get_meta_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_create_link_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_create_link_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_delete_link_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_delete_link_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_upload_bytes
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_upload_bytes
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_append_bytes
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_append_bytes
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_modify_bytes
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_modify_bytes
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_download_bytes
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_download_bytes
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_sync_in_bytes
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_sync_in_bytes
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_sync_out_bytes
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_sync_out_bytes
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_file_open_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_file_open_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_file_read_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_file_read_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_file_write_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_file_write_count
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: last_source_update
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: last_sync_update
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: last_synced_timestamp
+     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: last_heart_beat_time
+     @ 1 byte: if_trunk_server
