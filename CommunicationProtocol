@@ -13,97 +13,42 @@ body format:
 1. common command
 
 * FDFS_PROTO_CMD_QUIT
-  # function: notify server connection will be closed
-  # request body: none (no body part)
-  # response: none (no header and no body)
+   # function: notify server connection will be closed
+   # request body: none (no body part)
+   # response: none (no header and no body)
 
 
 2. client to tracker server command
 
- * TRACKER_PROTO_CMD_SERVER_LIST_GROUP
-  # function: list all groups
-  # request body: none
-  # response body: n group entries, n >= 0, the format of each entry:
-     @ FDFS_GROUP_NAME_MAX_LEN + 1 bytes: group_name
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_mb
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: free_mb
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: trunk_free_mb
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: storage_port
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: storage_http_port
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: active_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: current_write_server
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: store_path_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: subdir_count_per_path
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: current_trunk_file_id
+* TRACKER_PROTO_CMD_SERVER_LIST_ONE_GROUP
+   # function: get one group info
+   # request body:
+      @ FDFS_GROUP_NAME_MAX_LEN bytes: the group name to query
+   # response body: GroupInfo
 
 
- * TRACKER_PROTO_CMD_SERVER_LIST_STORAGE
-  # function: list storage servers of a group
+* TRACKER_PROTO_CMD_SERVER_LIST_GROUP
+   # function: list all groups
+   # request body: none
+   # response body: List<GroupInfo>
+
+
+* TRACKER_PROTO_CMD_SERVER_LIST_STORAGE
+   # function: list storage servers of a group
+   # request body:
+      @ FDFS_GROUP_NAME_MAX_LEN bytes: the group name to
+      @ IP_ADDRESS_SIZE bytes: this storage server ip address
+   # response body: List<StorageInfo>
+
+
+* TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITHOUT_GROUP_ONE
+   # function: Query storage server for upload, without group name
+   # request body: none (no body part)
+   # response body: StorageInfo
+
+
+* TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITH_GROUP_ONE
+  # function: query storage server for upload, with group name
   # request body:
      @ FDFS_GROUP_NAME_MAX_LEN bytes: the group name to
-     @ IP_ADDRESS_SIZE bytes: this storage server ip address
-  # response body: n storage entries, n >= 0, entry format: !B %ds %ds %ds %ds %ds 10Q 3L 42Q B
-     the format of each entry:
-     @ 1 byte: status
-     @ FDFS_STORAGE_ID_MAX_SIZE bytes: id
-     @ IP_ADDRESS_SIZE bytes: ip_addr
-     @ FDFS_DOMAIN_NAME_MAX_SIZE bytes: domain_name
-     @ FDFS_STORAGE_ID_MAX_SIZE bytes: src_ip
-     @ FDFS_VERSION_SIZE bytes: version
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: join_time
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: up_time
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_mb
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: free_mb
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: upload_priority
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: store_path_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: subdir_count_per_path
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: current_write_path
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: storage_port
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: storage_http_port
-     @ 4 bytes: alloc_count
-     @ 4 bytes: current_count
-     @ 4 bytes: max_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_upload_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_upload_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_append_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_append_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_modify_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_modify_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_truncate_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_truncate_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_set_meta_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_set_meta_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_delete_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_delete_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_download_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_download_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_get_meta_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_get_meta_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_create_link_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_create_link_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_delete_link_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_delete_link_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_upload_bytes
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_upload_bytes
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_append_bytes
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_append_bytes
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_modify_bytes
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_modify_bytes
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_download_bytes
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_download_bytes
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_sync_in_bytes
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_sync_in_bytes
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_sync_out_bytes
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_sync_out_bytes
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_file_open_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_file_open_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_file_read_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_file_read_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: total_file_write_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: success_file_write_count
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: last_source_update
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: last_sync_update
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: last_synced_timestamp
-     @ TRACKER_PROTO_PKG_LEN_SIZE bytes: last_heart_beat_time
-     @ 1 byte: if_trunk_server
+  # response body: StorageInfo

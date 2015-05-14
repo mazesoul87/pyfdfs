@@ -5,6 +5,7 @@ __author__ = 'mazesoul'
 
 import unittest
 from testconfig import config
+from nose.tools import assert_equal
 from pyfdfs.client import FdfsClient
 
 
@@ -18,6 +19,9 @@ class TestTracker(unittest.TestCase):
 
     def test_list_servers(self):
         for item in self.client.list_groups():
-            print item
+            fetch_group = self.client.list_one_group(item.group_name)
+            assert_equal(str(item), str(fetch_group))
             for storage_server in self.client.list_servers(item.group_name):
                 print storage_server
+            print self.client.query_store_with_group_one(item.group_name)
+        print self.client.query_store_without_group_one()

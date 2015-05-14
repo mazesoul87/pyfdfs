@@ -74,6 +74,10 @@ class Command(object):
         finally:
             del self.conn
 
+    def fetch_by_fmt(self, fmt):
+        resp, resp_size = self.execute()
+        return struct.unpack(fmt, resp)
+
     def fetch_list(self, item_cls):
         resp, resp_size = self.execute()
         ret_list = []
@@ -87,3 +91,9 @@ class Command(object):
             resp_size -= fmt_size
             idx += 1
         return ret_list
+
+    def fetch_one(self, item_cls):
+        resp, resp_size = self.execute()
+        ret = item_cls()
+        ret.set_info(resp)
+        return ret

@@ -32,7 +32,40 @@ class FdfsClient(object):
             pass
 
     def list_groups(self):
+        """
+        :return: List<GroupInfo>
+        function: list all groups
+        """
         return self.tracker.list_groups()
 
+    def list_one_group(self, group_name):
+        """
+        :param: group_name: which group
+        :return: GroupInfo
+        function: get one group info
+        """
+        return self.tracker.list_one_group(group_name)
+
     def list_servers(self, group_name, storage_ip=None):
+        """
+        :param: group_name: which group
+        :param: storage_ip: which storage servers
+        :return: List<StorageInfo>
+        function: list storage servers of a group
+        """
         return self.tracker.list_servers(group_name, storage_ip)
+
+    def query_store_without_group_one(self):
+        """
+        :return: StorageInfo
+        function: query storage server for upload, without group name
+        """
+        return self.tracker.query_store_without_group_one()
+
+    def query_store_with_group_one(self, group_name):
+        """
+        :param: group_name: which group
+        :return: StorageInfo
+        function: query storage server for upload, with group name
+        """
+        return self.tracker.query_store_with_group_one(group_name)
