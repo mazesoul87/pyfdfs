@@ -74,9 +74,13 @@ class Command(object):
         finally:
             del self.conn
 
+    @staticmethod
+    def unpack(fmt, resp):
+        return struct.unpack(fmt, resp)
+
     def fetch_by_fmt(self, fmt):
         resp, resp_size = self.execute()
-        return struct.unpack(fmt, resp)
+        return self.unpack(fmt, resp)
 
     def fetch_list(self, item_cls):
         resp, resp_size = self.execute()

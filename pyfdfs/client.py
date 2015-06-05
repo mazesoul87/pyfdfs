@@ -69,3 +69,18 @@ class FdfsClient(object):
         function: query storage server for upload, with group name
         """
         return self.tracker.query_store_with_group_one(group_name)
+
+    def query_store_without_group_all(self):
+        """
+        :return: list of StorageInfo
+        function: query which storage server to store file
+        """
+        return self.tracker.query_store_without_group_all()
+
+    def query_store_with_group_all(self, group_name):
+        """
+        :param: group_name: which group
+        :return: list of StorageInfo
+        function: query storage server for upload, with group name
+        """
+        return self.tracker.query_store_with_group_all(group_name)

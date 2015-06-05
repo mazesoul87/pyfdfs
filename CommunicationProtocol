@@ -48,7 +48,20 @@ body format:
 
 
 * TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITH_GROUP_ONE
-  # function: query storage server for upload, with group name
-  # request body:
-     @ FDFS_GROUP_NAME_MAX_LEN bytes: the group name to
-  # response body: StorageInfo
+   # function: query storage server for upload, with group name
+   # request body:
+      @ FDFS_GROUP_NAME_MAX_LEN bytes: the group name to
+   # response body: StorageInfo
+
+
+* TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITHOUT_GROUP_ALL
+   # function: query which storage server to store file
+   # request body: none (no body part)
+   # response body: list of StorageInfo
+   
+
+* TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITH_GROUP_ALL
+   # function: query which storage server to store file, with group name
+   # request body:
+      @ FDFS_GROUP_NAME_MAX_LEN bytes: the group name to
+   # response body: list of StorageInfo

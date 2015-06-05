@@ -46,7 +46,7 @@ class StrAttr(BaseAttr):
 
 class DatetimeAttr(BaseAttr):
     def __init__(self, name, val=None):
-        val = datetime.fromtimestamp( val or 0).isoformat()
+        val = datetime.fromtimestamp(val or 0).isoformat()
         super(DatetimeAttr, self).__init__(name, val)
 
     def __set__(self, obj, val):
