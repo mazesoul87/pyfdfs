@@ -216,6 +216,21 @@ class StorageInfo(object):
     free_mb = SpaceAttr("free_mb", FDFS_SPACE_SIZE_BASE_INDEX)
 
 
+class BasicStorageInfo(object):
+    """
+    @ FDFS_GROUP_NAME_MAX_LEN bytes: group_name
+    @ IP_ADDRESS_SIZE bytes: ip_addr
+    @ TRACKER_PROTO_PKG_LEN_SIZE bytes: current_write_path
+    @ TRACKER_PROTO_PKG_LEN_SIZE bytes: storage_port
+    """
+    __metaclass__ = BaseMeta
+    desc = "BasicStorageInfo information"
+    fmt = '!%ds %ds Q B' % (FDFS_GROUP_NAME_MAX_LEN, IP_ADDRESS_SIZE)
+
+    attributes = ("group_name", "ip_addr", "current_write_path", "storage_port",)
+    str_attrs = ("group_name", "ip_addr",)
+
+
 class GroupInfo(object):
     """
     @ FDFS_GROUP_NAME_MAX_LEN + 1 bytes: group_name

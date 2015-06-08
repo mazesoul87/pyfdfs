@@ -4,7 +4,7 @@ from __future__ import absolute_import
 __author__ = 'mazesoul'
 
 from pyfdfs.command import CommandHeader, Command
-from pyfdfs.structs import StorageInfo, GroupInfo
+from pyfdfs.structs import StorageInfo, GroupInfo, BasicStorageInfo
 from pyfdfs.enums import FDFS_GROUP_NAME_MAX_LEN, IP_ADDRESS_SIZE, \
     TRACKER_PROTO_CMD_SERVER_LIST_STORAGE, TRACKER_PROTO_CMD_SERVER_LIST_ALL_GROUPS, \
     TRACKER_PROTO_CMD_SERVER_LIST_ONE_GROUP, TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITHOUT_GROUP_ONE, \
@@ -76,10 +76,7 @@ class Tracker(object):
         """
         header = CommandHeader(cmd=TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITHOUT_GROUP_ONE)
         cmd = Command(pool=self.pool, header=header)
-        recv_fmt = '!%ds %ds Q B' % (FDFS_GROUP_NAME_MAX_LEN, IP_ADDRESS_SIZE - 1)
-        si = StorageInfo()
-        si.group_name, si.ip_addr, si.port, si.current_write_path = cmd.fetch_by_fmt(recv_fmt)
-        return si
+        return cmd.fetch_one(BasicStorageInfo)
 
     def query_store_with_group_one(self, group_name):
         """
@@ -95,11 +92,8 @@ class Tracker(object):
         header = CommandHeader(req_pkg_len=FDFS_GROUP_NAME_MAX_LEN,
                                cmd=TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITH_GROUP_ONE)
         cmd = Command(pool=self.pool, header=header, fmt='!%ds' % FDFS_GROUP_NAME_MAX_LEN)
-        recv_fmt = '!%ds %ds Q B' % (FDFS_GROUP_NAME_MAX_LEN, IP_ADDRESS_SIZE - 1)
         cmd.pack(group_name)
-        si = StorageInfo()
-        si.group_name, si.ip_addr, si.port, si.current_write_path = cmd.fetch_by_fmt(recv_fmt)
-        return si
+        return cmd.fetch_one(BasicStorageInfo)
 
     def query_store_without_group_all(self):
         """
@@ -113,15 +107,15 @@ class Tracker(object):
         header = CommandHeader(cmd=TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITHOUT_GROUP_ALL)
         cmd = Command(pool=self.pool, header=header)
         resp, resp_size = cmd.execute()
-        server_count = (resp_size - FDFS_GROUP_NAME_MAX_LEN - 1) / (IP_ADDRESS_SIZE - 1 + 8)
-        recv_fmt = '!%ds %ds %dQ B' % (FDFS_GROUP_NAME_MAX_LEN, server_count * (IP_ADDRESS_SIZE - 1), server_count)
+        server_count = (resp_size - FDFS_GROUP_NAME_MAX_LEN) / (IP_ADDRESS_SIZE + 8)
+        recv_fmt = '!%ds %ds %dQ B' % (FDFS_GROUP_NAME_MAX_LEN, server_count * IP_ADDRESS_SIZE, server_count)
         result = cmd.unpack(recv_fmt, resp)
 
         group_name = result[0]
         current_write_path = result[-1]
         si_list = []
         for idx in xrange(server_count):
-            si = StorageInfo()
+            si = BasicStorageInfo()
             si.group_name = group_name
             si.current_write_path = current_write_path
             si.ip_addr = result[idx + 1]
@@ -145,15 +139,15 @@ class Tracker(object):
         cmd = Command(pool=self.pool, header=header, fmt='!%ds' % FDFS_GROUP_NAME_MAX_LEN)
         cmd.pack(group_name)
         resp, resp_size = cmd.execute()
-        server_count = (resp_size - FDFS_GROUP_NAME_MAX_LEN - 1) / (IP_ADDRESS_SIZE - 1 + 8)
-        recv_fmt = '!%ds %ds %dQ B' % (FDFS_GROUP_NAME_MAX_LEN, server_count * (IP_ADDRESS_SIZE - 1), server_count)
+        server_count = (resp_size - FDFS_GROUP_NAME_MAX_LEN) / (IP_ADDRESS_SIZE + 8)
+        recv_fmt = '!%ds %ds %dQ B' % (FDFS_GROUP_NAME_MAX_LEN, server_count * IP_ADDRESS_SIZE, server_count)
         result = cmd.unpack(recv_fmt, resp)
 
         group_name = result[0]
         current_write_path = result[-1]
         si_list = []
         for idx in xrange(server_count):
-            si = StorageInfo()
+            si = BasicStorageInfo()
             si.group_name = group_name
             si.current_write_path = current_write_path
             si.ip_addr = result[idx + 1]
@@ -177,9 +171,9 @@ class Tracker(object):
         header = CommandHeader(req_pkg_len=FDFS_GROUP_NAME_MAX_LEN + file_name_size,
                                cmd=TRACKER_PROTO_CMD_SERVICE_QUERY_FETCH_ONE)
         cmd = Command(pool=self.pool, header=header, fmt="!%ds %ds" % (FDFS_GROUP_NAME_MAX_LEN, file_name_size))
-        recv_fmt = '!%ds %ds Q' % (FDFS_GROUP_NAME_MAX_LEN, IP_ADDRESS_SIZE - 1)
+        recv_fmt = '!%ds %ds Q' % (FDFS_GROUP_NAME_MAX_LEN, IP_ADDRESS_SIZE)
         cmd.pack(group_name, file_name)
-        si = StorageInfo()
+        si = BasicStorageInfo()
         si.group_name, si.ip_addr, si.port = cmd.fetch_by_fmt(recv_fmt)
         return si
 
@@ -202,21 +196,21 @@ class Tracker(object):
         cmd = Command(pool=self.pool, header=header, fmt="!%ds %ds" % (FDFS_GROUP_NAME_MAX_LEN, file_name_size))
         cmd.pack(group_name, file_name)
         resp, resp_size = cmd.execute()
-        server_count = (resp_size - FDFS_GROUP_NAME_MAX_LEN - 1 - 8 - (IP_ADDRESS_SIZE - 1)) / (IP_ADDRESS_SIZE - 1)
+        server_count = (resp_size - FDFS_GROUP_NAME_MAX_LEN - 1 - 8 - IP_ADDRESS_SIZE) / IP_ADDRESS_SIZE
         recv_fmt = '!%ds %ds Q %ds' % (FDFS_GROUP_NAME_MAX_LEN,
-                                       IP_ADDRESS_SIZE - 1,
-                                       server_count * (IP_ADDRESS_SIZE - 1))
+                                       IP_ADDRESS_SIZE,
+                                       server_count * IP_ADDRESS_SIZE)
         result = cmd.unpack(recv_fmt, resp)
         group_name = result[0]
         server_port = result[2]
         si_list = []
-        si = StorageInfo()
+        si = BasicStorageInfo()
         si.group_name = group_name
         si.ip_addr = result[1]
         si.port = server_port
         si_list.append(si)
         for idx in xrange(server_count):
-            si = StorageInfo()
+            si = BasicStorageInfo()
             si.group_name = group_name
             si.ip_addr = result[idx + 3]
             si.port = server_port
