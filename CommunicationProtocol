@@ -57,11 +57,26 @@ body format:
 * TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITHOUT_GROUP_ALL
    # function: query which storage server to store file
    # request body: none (no body part)
-   # response body: list of StorageInfo
-   
+   # response body: List<StorageInfo>
+
 
 * TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITH_GROUP_ALL
    # function: query which storage server to store file, with group name
    # request body:
       @ FDFS_GROUP_NAME_MAX_LEN bytes: the group name to
-   # response body: list of StorageInfo
+   # response body: List<StorageInfo>
+
+
+* TRACKER_PROTO_CMD_SERVICE_QUERY_FETCH
+   # function: query which storage server to download the file
+   # request body:
+      @ FDFS_GROUP_NAME_MAX_LEN bytes: group name
+   # response body: StorageInfo
+
+
+* TRACKER_PROTO_CMD_SERVICE_QUERY_FETCH_ALL
+   # function: query all storage servers to download the file
+   # request body:
+      @ FDFS_GROUP_NAME_MAX_LEN bytes: group name
+      @ filename bytes: filename
+   # response body: List<StorageInfo>
