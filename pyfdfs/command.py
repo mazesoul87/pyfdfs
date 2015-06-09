@@ -4,7 +4,10 @@ from __future__ import absolute_import
 __author__ = 'mazesoul'
 
 import os
+import sys
+import errno
 import struct
+from sendfile import sendfile
 
 
 class CommandHeader(object):
@@ -65,6 +68,41 @@ class Command(object):
             self.header.unpack_resp(resp_header)
             if self.header.status != 0:
                 raise Exception('Error: %d, %s' % (self.header.status, os.strerror(self.header.status)))
+            resp_body = self.conn.recv(self.header.resp_pkg_len)
+            return resp_body, self.header.resp_pkg_len
+        except Exception as e:
+            if self.conn:
+                self.conn.disconnect()
+            raise e
+        finally:
+            del self.conn
+
+    def send_file(self, file_name, buffer_size=4096):
+        """
+        :param file_name: file path
+        :return: response_body, total_response_size
+        """
+        if 'linux' not in sys.platform.lower():
+            raise Exception('sendfile system call only available on linux.')
+        try:
+            self.conn.send(self.buf)
+            resp_header = self.conn.recv(self.header.resp_header_len())
+            self.header.unpack_resp(resp_header)
+            if self.header.status != 0:
+                raise Exception('Error: %d, %s' % (self.header.status, os.strerror(self.header.status)))
+            sock_fd = self.conn.get_fd()
+            offset = 0
+            with open(file_name, "rb") as f_obj:
+                while 1:
+                    try:
+                        sent = sendfile(sock_fd, f_obj.fileno(), offset, buffer_size)
+                        if sent == 0:
+                            break
+                        offset += sent
+                    except OSError as e:
+                        if e.errno == errno.EAGAIN:
+                            continue
+                        raise e
             resp_body = self.conn.recv(self.header.resp_pkg_len)
             return resp_body, self.header.resp_pkg_len
         except Exception as e:

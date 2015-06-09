@@ -3,6 +3,8 @@ from __future__ import absolute_import
 
 __author__ = 'mazesoul'
 
+import os
+
 from pyfdfs.connection import ConnectionPool, Connection
 from pyfdfs.command import CommandHeader, Command
 from pyfdfs.structs import StorageResponseInfo
@@ -39,4 +41,21 @@ class Storage(object):
         return sr
 
     def upload_file_by_filename(self, file_path, meta_data):
-        pass
+        """
+        :param file_path: file path for send
+        :param meta_data: dictionary, store metadata in it
+        :return: StorageResponseInfo
+        """
+        file_size = os.stat(file_path).st_size
+        meta_str = self.pack_meta(meta_data)
+        pkg_len = TRACKER_PROTO_PKG_LEN_SIZE + TRACKER_PROTO_PKG_LEN_SIZE + len(meta_str) + file_size
+        header = CommandHeader(req_pkg_len=pkg_len, cmd=STORAGE_PROTO_CMD_UPLOAD_FILE)
+        cmd = Command(pool=self.pool, header=header, fmt="!%ds %ds %ds" % (TRACKER_PROTO_PKG_LEN_SIZE,
+                                                                           TRACKER_PROTO_PKG_LEN_SIZE,
+                                                                           len(meta_str)))
+        cmd.pack(len(meta_str), file_size, meta_str)
+        resp, resp_pkg_len = cmd.send_file(file_path)
+        sr = StorageResponseInfo()
+        fmt = "!%ds %ds" % (FDFS_GROUP_NAME_MAX_LEN, resp_pkg_len - FDFS_GROUP_NAME_MAX_LEN)
+        sr.group_name, sr.filename = cmd.unpack(fmt, resp)
+        return sr

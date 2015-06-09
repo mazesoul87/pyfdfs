@@ -93,6 +93,11 @@ class Connection(object):
         except (socket.error, socket.timeout), e:
             raise Exception('Error: while writing to socket: (%s)' % e.args)
 
+    def get_fd(self):
+        if self.sock is None:
+            self.connect()
+        return self.sock.fileno()
+
 
 class ConnectionPool(object):
     """
