@@ -3,6 +3,8 @@ from __future__ import absolute_import, with_statement
 
 __author__ = 'mazesoul'
 
+TRACKER_PROTO_PKG_LEN_SIZE = 8
+
 IP_ADDRESS_SIZE = 16
 
 FDFS_DOMAIN_NAME_MAX_SIZE = 128
@@ -195,6 +197,9 @@ STORAGE_SET_METADATA_FLAG_OVERWRITE_STR = "O"
 # for replace, insert when the meta item not exist, otherwise update it
 STORAGE_SET_METADATA_FLAG_MERGE = 'M'
 STORAGE_SET_METADATA_FLAG_MERGE_STR = "M"
+
+FDFS_RECORD_SEPARATOR = '\x01'
+FDFS_FIELD_SEPARATOR = '\x02'
 
 FDFS_PROTO_PKG_LEN_SIZE = 8
 FDFS_PROTO_CMD_SIZE = 1

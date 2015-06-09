@@ -154,7 +154,7 @@ class ConnectionPool(object):
             raise Exception("Too many connections")
         conn_instance = None
         num_try = 10
-        while True:
+        while 1:
             try:
                 if num_try <= 0:
                     sys.exit()

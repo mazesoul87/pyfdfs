@@ -5,7 +5,7 @@ __author__ = 'mazesoul'
 
 from pyfdfs.connection import ConnectionPool, Connection
 from pyfdfs.tracker import Tracker
-
+from pyfdfs.storage import Storage
 
 class FdfsClient(object):
     def __init__(self, host_list, pool_cls=ConnectionPool, conn_cls=Connection, timeout=60, max_conn=2 ** 31):
@@ -30,6 +30,19 @@ class FdfsClient(object):
         except Exception, e:
             print("Error: %s" % e)
             pass
+
+    def _get_storage(self, host, port):
+        """
+        :param host: which storage server host
+        :param port: which storage server port
+        :return: Storage Object
+        """
+        storage = self.storage_servers.get((host, port,))
+        if storage is None:
+            storage = Storage(host, port, pool_cls=self.pool_cls, conn_cls=self.conn_cls,
+                              timeout=self.timeout, max_conn=self.max_conn)
+            self.storage_servers[(host, port,)] = storage
+        return storage
 
     def list_groups(self):
         """
@@ -57,7 +70,7 @@ class FdfsClient(object):
 
     def query_store_without_group_one(self):
         """
-        :return: StorageInfo
+        :return: BasicStorageInfo
         function: query storage server for upload, without group name
         """
         return self.tracker.query_store_without_group_one()
@@ -65,14 +78,14 @@ class FdfsClient(object):
     def query_store_with_group_one(self, group_name):
         """
         :param: group_name: which group
-        :return: StorageInfo
+        :return: BasicStorageInfo
         function: query storage server for upload, with group name
         """
         return self.tracker.query_store_with_group_one(group_name)
 
     def query_store_without_group_all(self):
         """
-        :return: List<StorageInfo>
+        :return: List<BasicStorageInfo>
         function: query which storage server to store file
         """
         return self.tracker.query_store_without_group_all()
@@ -80,7 +93,7 @@ class FdfsClient(object):
     def query_store_with_group_all(self, group_name):
         """
         :param: group_name: which group
-        :return: List<StorageInfo>
+        :return: List<BasicStorageInfo>
         function: query storage server for upload, with group name
         """
         return self.tracker.query_store_with_group_all(group_name)
@@ -89,7 +102,7 @@ class FdfsClient(object):
         """
         :param group_name: which group
         :param file_name: which file
-        :return: StorageInfo
+        :return: BasicStorageInfo
         function: query which storage server to download the file
         """
         return self.tracker.query_fetch_one(group_name, file_name)
@@ -98,6 +111,6 @@ class FdfsClient(object):
         """
         :param group_name: which group
         :param file_name: which file
-        :return: List<StorageInfo>
+        :return: List<BasicStorageInfo>
         """
         return self.tracker.query_fetch_all(group_name, file_name)

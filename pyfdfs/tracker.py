@@ -10,7 +10,7 @@ from pyfdfs.enums import FDFS_GROUP_NAME_MAX_LEN, IP_ADDRESS_SIZE, \
     TRACKER_PROTO_CMD_SERVER_LIST_ONE_GROUP, TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITHOUT_GROUP_ONE, \
     TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITH_GROUP_ONE, TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITHOUT_GROUP_ALL, \
     TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITH_GROUP_ALL, TRACKER_PROTO_CMD_SERVICE_QUERY_FETCH_ONE, \
-    TRACKER_PROTO_CMD_SERVICE_QUERY_FETCH_ALL
+    TRACKER_PROTO_CMD_SERVICE_QUERY_FETCH_ALL, TRACKER_PROTO_PKG_LEN_SIZE
 
 
 class Tracker(object):
@@ -67,12 +67,12 @@ class Tracker(object):
 
     def query_store_without_group_one(self):
         """
-        :return: StorageInfo
+        :return: BasicStorageInfo
 
         * TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITHOUT_GROUP_ONE
            # function: query storage server for upload, without group name
            # request body: none (no body part)
-           # response body: StorageInfo
+           # response body: BasicStorageInfo
         """
         header = CommandHeader(cmd=TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITHOUT_GROUP_ONE)
         cmd = Command(pool=self.pool, header=header)
@@ -81,13 +81,13 @@ class Tracker(object):
     def query_store_with_group_one(self, group_name):
         """
         :param: group_name: which group
-        :return: StorageInfo
+        :return: BasicStorageInfo
 
         * TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITH_GROUP_ONE
            # function: query storage server for upload, with group name
            # request body:
               @ FDFS_GROUP_NAME_MAX_LEN bytes: the group name to
-           # response body: StorageInfo
+           # response body: BasicStorageInfo
         """
         header = CommandHeader(req_pkg_len=FDFS_GROUP_NAME_MAX_LEN,
                                cmd=TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITH_GROUP_ONE)
@@ -97,17 +97,17 @@ class Tracker(object):
 
     def query_store_without_group_all(self):
         """
-        :return: List<StorageInfo>
+        :return: List<BasicStorageInfo>
 
         * TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITHOUT_GROUP_ALL
            # function: query which storage server to store file
            # request body: none (no body part)
-           # response body: List<StorageInfo>
+           # response body: List<BasicStorageInfo>
         """
         header = CommandHeader(cmd=TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITHOUT_GROUP_ALL)
         cmd = Command(pool=self.pool, header=header)
         resp, resp_size = cmd.execute()
-        server_count = (resp_size - FDFS_GROUP_NAME_MAX_LEN) / (IP_ADDRESS_SIZE + 8)
+        server_count = (resp_size - FDFS_GROUP_NAME_MAX_LEN) / (IP_ADDRESS_SIZE + TRACKER_PROTO_PKG_LEN_SIZE)
         recv_fmt = '!%ds %ds %dQ B' % (FDFS_GROUP_NAME_MAX_LEN, server_count * IP_ADDRESS_SIZE, server_count)
         result = cmd.unpack(recv_fmt, resp)
 
@@ -126,20 +126,20 @@ class Tracker(object):
     def query_store_with_group_all(self, group_name):
         """
         :param group_name: which group
-        :return: List<StorageInfo>
+        :return: List<BasicStorageInfo>
 
         * TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITH_GROUP_ALL
            # function: query which storage server to store file, with group name
            # request body:
               @ FDFS_GROUP_NAME_MAX_LEN bytes: the group name to
-           # response body: List<StorageInfo>
+           # response body: List<BasicStorageInfo>
         """
         header = CommandHeader(req_pkg_len=FDFS_GROUP_NAME_MAX_LEN,
                                cmd=TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITH_GROUP_ALL)
         cmd = Command(pool=self.pool, header=header, fmt='!%ds' % FDFS_GROUP_NAME_MAX_LEN)
         cmd.pack(group_name)
         resp, resp_size = cmd.execute()
-        server_count = (resp_size - FDFS_GROUP_NAME_MAX_LEN) / (IP_ADDRESS_SIZE + 8)
+        server_count = (resp_size - FDFS_GROUP_NAME_MAX_LEN) / (IP_ADDRESS_SIZE + TRACKER_PROTO_PKG_LEN_SIZE)
         recv_fmt = '!%ds %ds %dQ B' % (FDFS_GROUP_NAME_MAX_LEN, server_count * IP_ADDRESS_SIZE, server_count)
         result = cmd.unpack(recv_fmt, resp)
 
@@ -159,13 +159,13 @@ class Tracker(object):
         """
         :param group_name: which group
         :param file_name: which file
-        :return: StorageInfo
+        :return: BasicStorageInfo
 
         * TRACKER_PROTO_CMD_SERVICE_QUERY_FETCH
            # function: query which storage server to download the file
            # request body:
               @ FDFS_GROUP_NAME_MAX_LEN bytes: group name
-           # response body: StorageInfo
+           # response body: BasicStorageInfo
         """
         file_name_size = len(file_name)
         header = CommandHeader(req_pkg_len=FDFS_GROUP_NAME_MAX_LEN + file_name_size,
@@ -181,14 +181,14 @@ class Tracker(object):
         """
         :param group_name: which group
         :param file_name: which file
-        :return: List<StorageInfo>
+        :return: List<BasicStorageInfo>
 
         * TRACKER_PROTO_CMD_SERVICE_QUERY_FETCH_ALL
            # function: query all storage servers to download the file
            # request body:
               @ FDFS_GROUP_NAME_MAX_LEN bytes: group name
               @ filename bytes: filename
-           # response body: List<StorageInfo>
+           # response body: List<BasicStorageInfo>
         """
         file_name_size = len(file_name)
         header = CommandHeader(req_pkg_len=FDFS_GROUP_NAME_MAX_LEN + file_name_size,
@@ -196,7 +196,8 @@ class Tracker(object):
         cmd = Command(pool=self.pool, header=header, fmt="!%ds %ds" % (FDFS_GROUP_NAME_MAX_LEN, file_name_size))
         cmd.pack(group_name, file_name)
         resp, resp_size = cmd.execute()
-        server_count = (resp_size - FDFS_GROUP_NAME_MAX_LEN - 1 - 8 - IP_ADDRESS_SIZE) / IP_ADDRESS_SIZE
+        server_count = (resp_size - FDFS_GROUP_NAME_MAX_LEN - 1 - TRACKER_PROTO_PKG_LEN_SIZE
+                        - IP_ADDRESS_SIZE) / IP_ADDRESS_SIZE
         recv_fmt = '!%ds %ds Q %ds' % (FDFS_GROUP_NAME_MAX_LEN,
                                        IP_ADDRESS_SIZE,
                                        server_count * IP_ADDRESS_SIZE)

@@ -257,3 +257,15 @@ class GroupInfo(object):
     total_mb = SpaceAttr("total_mb", FDFS_SPACE_SIZE_BASE_INDEX)
     free_mb = SpaceAttr("free_mb", FDFS_SPACE_SIZE_BASE_INDEX)
     trunk_free_mb = SpaceAttr("trunk_free_mb", FDFS_SPACE_SIZE_BASE_INDEX)
+
+
+class StorageResponseInfo(object):
+    """
+    @ FDFS_GROUP_NAME_MAX_LEN bytes: group_name
+    @ filename bytes: filename
+    """
+    __metaclass__ = BaseMeta
+    desc = "StorageResponseInfo information"
+
+    attributes = ("group_name", "filename",)
+    str_attrs = ("group_name", "filename",)
