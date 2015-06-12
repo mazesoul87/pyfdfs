@@ -10,7 +10,7 @@ from pyfdfs.command import CommandHeader, Command
 from pyfdfs.structs import StorageResponseInfo
 from pyfdfs.enums import TRACKER_PROTO_PKG_LEN_SIZE, FDFS_RECORD_SEPARATOR, FDFS_FIELD_SEPARATOR, \
     STORAGE_PROTO_CMD_UPLOAD_FILE, FDFS_GROUP_NAME_MAX_LEN, FDFS_FILE_EXT_NAME_MAX_LEN, \
-    STORAGE_PROTO_CMD_DELETE_FILE, STORAGE_SET_METADATA_FLAG_OVERWRITE, STORAGE_SET_METADATA_FLAG_MERGE, \
+    STORAGE_PROTO_CMD_DELETE_FILE, STORAGE_SET_METADATA_FLAG_OVERWRITE, \
     STORAGE_PROTO_CMD_SET_METADATA, STORAGE_PROTO_CMD_GET_METADATA
 
 
@@ -188,6 +188,4 @@ class Storage(object):
             k, v = item.split(FDFS_FIELD_SEPARATOR)
             meta_data[k] = v
         return meta_data
-
-
 
